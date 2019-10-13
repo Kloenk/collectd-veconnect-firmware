@@ -1,0 +1,15 @@
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+
+#define CONF_WIFI_SSID "Freifunk"
+
+#define CONF_COLLECTD_SERVER_HOST "51.254.249.187"
+#define CONF_COLLECTD_SERVER_PORT 9092
+
+#define CONF_PHOENIX_NAME "P0"
+#define CONF_PHOENIX_SERIAL Serial
+#define CONF_PHOENIX_BAUT 19200
+
+#define CONF_SCRAPE_INTERVAL 50
+
+#endif // __CONFIG_H__
