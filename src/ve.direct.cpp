@@ -42,7 +42,7 @@ char *ve::get(uint16_t id, uint8_t flag) {
 
     checksum -= (id / 256) & 255;
 
-    sprintf(buffer, ":7%02X%02X%02X%02X\n\r", id & 255, (id / 256) & 255, flag, checksum); // id in little endian
+    sprintf(buffer, ":7%02X%02X%02X%02X\r\n", id & 255, (id / 256) & 255, flag, checksum); // id in little endian
 
     //ve::finish(buffer);
 

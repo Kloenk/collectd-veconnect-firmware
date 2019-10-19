@@ -7,8 +7,10 @@
 WiFiClient client;
 
 void setup() {
+	Serial.begin(19200);
 	CONF_PHOENIX_SERIAL.begin(CONF_PHOENIX_BAUT);
 	delay(200);
+	//CONF_PHOENIX_SERIAL.setTimeout(100);
 
 	#ifdef CONF_WIFI_PASS
 	WiFi.begin(CONF_WIFI_SSID, CONF_WIFI_PASS);
@@ -18,13 +20,15 @@ void setup() {
 
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
+		Serial.print(".");
 	}
 
-	if (!client.connect(CONF_COLLECTD_SERVER_HOST, CONF_COLLECTD_SERVER_PORT)) {
-   		Serial.println("Connection to host failed");
-   		delay(1000);
-   		return;
-	}
+	//if (!client.connect(CONF_COLLECTD_SERVER_HOST, CONF_COLLECTD_SERVER_PORT)) {
+   	//	Serial.println("Connection to host failed");
+   	//	delay(1000);
+   	//	return;
+	//}
+	Serial.println("finished init");
 }
 
 void loop() {
@@ -32,9 +36,9 @@ void loop() {
 		0x0100, // Product Id
 		0x0101, // Hardware version
 		0x0102, // Software version
-    		0x0104, // Group Id
+    	0x0104, // Group Id
 		0x0105, // Device instance
-    		0x0106, // Device class
+    	0x0106, // Device class
 		0x010A, // Serial number
 		0x010B, // Model name
 		0x0140, // Capabilities
@@ -101,20 +105,55 @@ void loop() {
 		0xEDB9, // Relay panel high voltage clear
 		0x100A, // Relay minimum enabled time
 	};
-	while (true) {
+	while(true) {
+		for (int i = 0; i < sizeof(addresses) / sizeof(uint16_t); i += 5) {
+			String input[5];
+			for (int j = 0; j < 5; j++) {
+				char *req = ve::get(addresses[j+i]);
+				CONF_PHOENIX_SERIAL.print(req); // req already contains \r\n
+				CONF_PHOENIX_SERIAL.flush();
+				delay(30);
+				input[j] = CONF_PHOENIX_SERIAL.readString();
+			}
+			client.connect(CONF_COLLECTD_SERVER_HOST, CONF_COLLECTD_SERVER_PORT);
+			for (int j = 0; j < 5; j++) {
+				client.print(CONF_PHOENIX_NAME);
+				client.println(input[j]);
+				Serial.print("read: ");
+				Serial.println(input[j]);
+			}
+			client.flush();
+			client.stop();
+		}
+	}
+	/*while (true) {
+		while (CONF_PHOENIX_SERIAL.available()) {
+			CONF_PHOENIX_SERIAL.read();
+		}
 		for (int i = 0; i < (sizeof(addresses) / sizeof(uint16_t)); i +=5) {
-			String input;
-			for (int j = i; j < i+5; j++){
-				char *req = ve::get(addresses[j]);
+			String input[5];
+			while (CONF_PHOENIX_SERIAL.available()) {
+				CONF_PHOENIX_SERIAL.readStringUntil('\n');
+			}
+			for (int j = 0; j < 5; j++){
+				char *req = ve::get(addresses[j+i]);
 				Serial.print(req);
+				delay(40);
+				if (CONF_PHOENIX_SERIAL.available()) {
+					input[j] = CONF_PHOENIX_SERIAL.readString();
+				}
+			}
+			for (int j = 0; j < 5; j++) {
+				client.print(CONF_PHOENIX_NAME);
+				client.println(input[j]);
 			}
 			#ifdef CONF_SCRAPE_INTERVAL
 			delay(CONF_SCRAPE_INTERVAL);
 			#endif // CONF_SCRAPE_INTERVAL
-			while (CONF_PHOENIX_SERIAL.available()) {
+			/*while (CONF_PHOENIX_SERIAL.available()) {
 				client.print(CONF_PHOENIX_NAME);
 				client.println(CONF_PHOENIX_SERIAL.readStringUntil('\n'));
-			}
-		}
-	}
+			}*/
+		//}
+	//}
 }
